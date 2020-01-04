@@ -32,7 +32,7 @@ g.set_titles('{row_name}')
 # By setting "hspec" to a negative value, the subplot axes bounds will overlap vertically.
 # I'll add some code on the FacetGrid object to remove the y-axis through the despine method and remove the ticks through the set method.
 
-# The individual subplots now overlap, but we've still got a problem: the backgrounds of the subplots are opaque, thus obscuring all but the tops of all of the individual group distributions, with the exception of the lowest. In addition, the individual subplot titles overlap the other distributions with some ambiguity: these should be moved elsewhere in the individual plots. The revised code and plot look like this
+# The individual subplots now overlap, but we've still got a problem: the backgrounds of the subplots are opaque, thus obscuring all but the tops of all of the individual group distributions, with the exception of the lowest. In addition, the individual subplot titles overlap the other distributions with some ambiguity: these should be moved elsewhere in the individual plots. The revised code and plot look like this:
 
 group_means = df.groupby(['many_cat_var']).mean()
 group_order = group_means.sort_values(['num_var'], ascending = False).index
@@ -53,3 +53,7 @@ def label_text(x, **kwargs):
 g.map(label_text, 'many_cat_var')
 g.set_xlabels('num_var')
 g.set_titles('')
+
+# We make clever use of the FacetGrid object's map function to perform the plot modifications. Previously, you've seen map used where the first argument is a plotting function, the following arguments are positional variable strings, and any additional arguments are keyword arguments for the plotting function. In actuality, you can set any function as the first argument, which will be applied to each facet. To apply the transparency using map, I set up an anonymous lambda function that gets the current Axes (gca), selects its background (patch), and sets its transparency to full.
+
+# As for the second map argument, it sends a pandas Series to the function specified by the first argument. This Series is filtered to include only the column specified by the second map argument, with only the rows appropriate for each facet. In this case, I exploit the fact that the 'many_cat_var' column is filled with copies of the categorical feature string to specify the text string, with hardcoded positional values appropriate to the plot. (map also sends a few general keyword arguments like 'color' automatically to the specified function, hence the need for **kwargs to capture them despite not specifying any myself.) One downside to this approach is that the x-axis labels get replaced with 'many_cat_var' after the map call, thus requiring the addition of a set_xlabels function call to reset the string.
